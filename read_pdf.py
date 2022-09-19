@@ -17,7 +17,7 @@ nltk.download("punkt")
 nltk.download("stopwords")
 stops=set(stopwords.words("english"))
 def clean_content(sentence):
-    sentence= sentence.lower()
+    
     sentence=re.sub(r'\<[^<>]*\>','',sentence)
     sentence=re.sub(r'^\W+|\W+$',' ',sentence)
     sentence=re.sub(r'\s',' ',sentence)
@@ -33,7 +33,7 @@ def process_sentences(cleaned_content):
     des_clean=[]
     
     for word in cleaned_content:
-        
+        word=''.join([i for i in word if not i.isdigit()])
         
         
             
@@ -91,6 +91,7 @@ with open("19830024525_cleaned.pickle","rb") as f:
 from nltk.cluster.util import cosine_distance
 import numpy as np
 import networkx as nx
+'''
 def sentence_similarity(sent1, sent2, stopwords=None):
     if stopwords is None:
         stopwords = []
@@ -148,15 +149,58 @@ def generate_summary(final_cleaned_data1, top_n=5):
     print("Indexes of top ranked_sentence order are ", ranked_sentence)    
 
     for i in range(top_n):
-      summarize_text.append(" ".join(ranked_sentence[i][1]))
+      summarize_text.append("".join(ranked_sentence[i][1]))
 
     # Step 5 - Offcourse, output the summarize texr
     summary=". ".join(summarize_text)
-    print("Summarize Text: \n", )
+    print("Summarize Text: \n",summary)
     with open("19830024525_summary.txt","w") as f:
         f.writelines(summary)
         
-generate_summary(final_cleaned_data1)
+generate_summary(final_cleaned_data1[:100])
+'''
+freq_table=dict()
+def calculate_freq(final_cleaned_data1):
+    text=' '.join(final_cleaned_data1)
+    print(len(list(text)))
+    for word in text.split(" "):
+        word=word.lower()
+        freq_table[word]=freq_table.get(word,0)+1
+
+sentence_value=dict()
+def sentence_freq():
+    
+    for sentence in final_cleaned_data1:
+        words=sentence.split(" ")
+        words=[i.lower() for i in words]
+        for word,freq in freq_table.items():
+            if word in words:
+                if sentence in sentence_value:
+                    sentence_value[sentence]+=freq
+                else:
+                    sentence_value[sentence]=freq
+def summary():
+    sumvalues=0
+    for sentence in sentence_value:
+        sumvalues+=sentence_value[sentence]
+    average=int(sumvalues/len(final_cleaned_data1))
+    summary=''
+    for sentence in final_cleaned_data1:
+        if (sentence in sentence_value) and (sentence_value[sentence] >(10*average)):
+            summary+=". "+sentence
+    print(len(list(summary)))
+    with open("summary.txt","w") as f:
+        f.write(summary)
+calculate_freq(final_cleaned_data1)
+sentence_freq()
+summary()
+
+    
+    
+
+
+
+
 
 '''
 pdffileobj=open("19830024525.pdf","rb")
