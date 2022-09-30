@@ -37,7 +37,7 @@ def process_sentences(cleaned_content):
         
         
             
-        if word not in string.punctuation:
+        if word not in string.punctuation and word.lower() not in stops:
             
             
               stem=l.lemmatize(word)
@@ -49,8 +49,8 @@ def process_sentences(cleaned_content):
     text=contractions.fix(str1)
     print(text)
     return text
+#Preprocessing
 
-'''
 with open("19830024525.txt","r") as f:
     final_cleaned_data=[]
     words_list=[]
@@ -83,7 +83,7 @@ with open("19830024525.txt","r") as f:
 with open("19830024525_cleaned.pickle","wb") as f:
 
     pickle.dump(final_cleaned_data,f)
-'''
+
 with open("19830024525_cleaned.pickle","rb") as f:
     final_cleaned_data1=pickle.load(f)
 
@@ -91,6 +91,8 @@ with open("19830024525_cleaned.pickle","rb") as f:
 from nltk.cluster.util import cosine_distance
 import numpy as np
 import networkx as nx
+
+# Summary using frequencies
 '''
 def sentence_similarity(sent1, sent2, stopwords=None):
     if stopwords is None:
@@ -159,6 +161,7 @@ def generate_summary(final_cleaned_data1, top_n=5):
         
 generate_summary(final_cleaned_data1[:100])
 '''
+'''
 freq_table=dict()
 def calculate_freq(final_cleaned_data1):
     text=' '.join(final_cleaned_data1)
@@ -195,13 +198,13 @@ calculate_freq(final_cleaned_data1)
 sentence_freq()
 summary()
 
+''' 
     
-    
 
 
 
 
-
+# Convert PDF to Text
 '''
 pdffileobj=open("19830024525.pdf","rb")
 pdfreader=PyPDF2.PdfFileReader(pdffileobj)

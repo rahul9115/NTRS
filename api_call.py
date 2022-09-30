@@ -34,7 +34,7 @@ except:
         print("in")
         for i in set1:
             try:
-                for i in completed:
+                if i in completed:
                     continue
                 print(int(i))
                 response = requests.get(f'https://ntrs.nasa.gov/api/citations/{i}/downloads/{i}.pdf', params=params, headers=headers)
@@ -43,7 +43,7 @@ except:
                     completed.append(i)
             except:
                 with open("completed.pickle","wb") as f:
-                    completed=pickle.dump(completed,f)
+                    pickle.dump(completed,f)
                 continue
 
         
