@@ -50,7 +50,46 @@ def process_sentences(cleaned_content):
     print(text)
     return text
 #Preprocessing
+import pdfplumber
+with pdfplumber.open(r'19850003854.pdf') as pdf:
+  l=len(pdf.pages)
+  
+  text=[]
+  word_count=0
+  for i in range(0,20):
+    extracted_page =pdf.pages[i] 
+    extracted_text = extracted_page.extract_text()
+    
+    
+    text.append(extracted_text)
+  extracted_text='. '.join(text)
+  print(extracted_text.split(".")[0])
+  
+  final_cleaned_data2=[]
+  words_list=[]
+  for sentence in extracted_text.split("."):
+    
+          
+            
+    
+    
+    print("value"+sentence)
+    
+    sentence=clean_content(sentence)
+   
+            
+    sentence=process_sentences(sentence)
+    
+    final_cleaned_data2.append(sentence)
+with open("19830024525_cleaned_10.pickle","wb") as f:
 
+    pickle.dump(final_cleaned_data2,f)
+
+with open("19830024525_cleaned_10.pickle","rb") as f:
+    final_cleaned_data2=pickle.load(f)
+print(final_cleaned_data2)
+
+'''
 with open("19830024525.txt","r") as f:
     final_cleaned_data=[]
     words_list=[]
@@ -87,7 +126,7 @@ with open("19830024525_cleaned.pickle","wb") as f:
 with open("19830024525_cleaned.pickle","rb") as f:
     final_cleaned_data1=pickle.load(f)
 
-
+'''
 from nltk.cluster.util import cosine_distance
 import numpy as np
 import networkx as nx
