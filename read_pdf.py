@@ -1,6 +1,6 @@
 from distutils.command.clean import clean
 from symbol import continue_stmt
-from termios import IUCLC
+
 import PyPDF2
 import pandas as pd
 import re,nltk
@@ -28,6 +28,7 @@ stops=set(stopwords.words("english"))
 #Preprocessing
 final_long_summary={}
 final_short_summary={}
+final_conclusion_summary={}
 def clean_content(sentence):
     
     sentence=re.sub(r'\<[^<>]*\>','',sentence)
@@ -62,24 +63,31 @@ def process_sentences(cleaned_content):
     print(text)
     return text
 
-def totxt(id):
-    pdffileobj=open(f"{id}.pdf","rb")
-    pdfreader=PyPDF2.PdfFileReader(pdffileobj)
-    x=pdfreader.numPages
-    completed=0
-    for i in range(0,x):
-        try:
-            pageobj=pdfreader.getPage(i)
-            text=pageobj.extractText()
-            print(i)
-            
-            with open(f"{id}.txt","a",encoding='utf-8') as f:
-                
-                f.write(str(text))
-        except Exception as e:
-            print(e)
-            print(text)
-            break
+def text_rank_conclusion_summary(id,final_cleaned_data1):
+    
+    
+    extracted_text = '. '.join(final_cleaned_data1)
+    def textrank(corpus, ratio=0.2):    
+        if type(corpus) is str:        
+            corpus = [corpus]    
+            lst_summaries = [gensim.summarization.summarize(txt,  
+                            ratio=ratio) for txt in corpus]    
+        return lst_summaries
+    val=textrank(extracted_text)
+    print(len(val[0].split(".")))
+    summary=str(val[0])
+
+    with open("summary3.txt","w") as f:
+        f.write(str(summary))
+    with open("summary3.txt","r") as f:
+        l=[]
+        d={}
+        
+        for i in f.readlines():
+            d[i]=d.get(i,0)+1
+        final_summary=' '.join(d.keys())
+
+    final_conclusion_summary.update({id:final_summary})
 def text_rank_short_summary(id,final_cleaned_data1):
     
     
@@ -135,30 +143,61 @@ def text_rank_long_summary(id,final_cleaned_data1):
     
 
 def short_summary(id):
-    with pdfplumber.open(f'{id}.pdf') as pdf:
-        l=len(pdf.pages)
-        
-        text=[]
-        word_count=0
-        for i in range(0,20):
-            extracted_page =pdf.pages[i] 
-            extracted_text = extracted_page.extract_text()
+    try:
+        with pdfplumber.open(f'{id}.pdf') as pdf:
+            l=len(pdf.pages)
+            
+            text=[]
+            word_count=0
+            for i in range(0,20):
+                extracted_page =pdf.pages[i] 
+                extracted_text = extracted_page.extract_text()
+                
+                
+                text.append(extracted_text)
+            extracted_text='. '.join(text)
             
             
-            text.append(extracted_text)
-        extracted_text='. '.join(text)
-        
-        
-        final_cleaned_data2=[]
-        words_list=[]
-        for sentence in extracted_text.split("."):
+            final_cleaned_data2=[]
+            words_list=[]
+            for sentence in extracted_text.split("."):
+                
+                sentence=clean_content(sentence)
             
-            sentence=clean_content(sentence)
-        
-            sentence=process_sentences(sentence)
+                sentence=process_sentences(sentence)
+                
+                final_cleaned_data2.append(sentence)
+            text_rank_short_summary(id,final_cleaned_data2)
+    except:
+        pass
+def conclusion_summary(id):
+    try:
+        with pdfplumber.open(f'{id}.pdf') as pdf:
+            l=len(pdf.pages)
             
-            final_cleaned_data2.append(sentence)
-        text_rank_short_summary(id,final_cleaned_data2)
+            text=[]
+            word_count=0
+            for i in range(l-1,20,-1):
+                extracted_page =pdf.pages[i] 
+                extracted_text = extracted_page.extract_text()
+                
+                
+                text.append(extracted_text)
+            extracted_text='. '.join(text)
+            
+            
+            final_cleaned_data2=[]
+            words_list=[]
+            for sentence in extracted_text.split("."):
+                
+                sentence=clean_content(sentence)
+            
+                sentence=process_sentences(sentence)
+                
+                final_cleaned_data2.append(sentence)
+            text_rank_conclusion_summary(id,final_cleaned_data2)
+    except:
+        pass
         
     
     '''
@@ -172,30 +211,33 @@ def short_summary(id):
     # Convert PDF to Text
     '''
 def long_summary(id):
-    with pdfplumber.open(f'{id}.pdf') as pdf:
-        l=len(pdf.pages)
-        
-        text=[]
-        word_count=0
-        for i in range(l):
-            extracted_page =pdf.pages[i] 
-            extracted_text = extracted_page.extract_text()
+    try:
+        with pdfplumber.open(f'{id}.pdf') as pdf:
+            l=len(pdf.pages)
+            
+            text=[]
+            word_count=0
+            for i in range(l):
+                extracted_page =pdf.pages[i] 
+                extracted_text = extracted_page.extract_text()
+                
+                
+                text.append(extracted_text)
+            extracted_text='. '.join(text)
             
             
-            text.append(extracted_text)
-        extracted_text='. '.join(text)
-        
-        
-        final_cleaned_data2=[]
-        words_list=[]
-        for sentence in extracted_text.split("."):
+            final_cleaned_data2=[]
+            words_list=[]
+            for sentence in extracted_text.split("."):
+                
+                sentence=clean_content(sentence)
             
-            sentence=clean_content(sentence)
-        
-            sentence=process_sentences(sentence)
-            
-            final_cleaned_data2.append(sentence)
-        text_rank_long_summary(id,final_cleaned_data2)
+                sentence=process_sentences(sentence)
+                
+                final_cleaned_data2.append(sentence)
+            text_rank_long_summary(id,final_cleaned_data2)
+    except:
+        pass
     '''
     with open(f"cleaned_long_{id}.pickle","wb") as f:
 
@@ -203,15 +245,17 @@ def long_summary(id):
 
     with open(f"cleaned_long_{id}.pickle","rb") as f:
         final_cleaned_data1=pickle.load(f)
-    '''
-
+   '''
+'''
 with open("final_ids.pickle","rb") as f:
         set1=pickle.load(f)
         for i in set1:
-            short_summary(i)
-            long_summary(i)
+            #short_summary(i)
+            #long_summary(i)
+            conclusion_summary(i)
+'''
 
-
+'''
 with open(f"final_all_long_summary.pickle","wb") as f:
 
     pickle.dump(final_long_summary,f)
@@ -219,13 +263,24 @@ with open(f"final_all_short_summary.pickle","wb") as f:
 
     pickle.dump(final_short_summary,f)
 
-with open(f"cleaned_all_short_summary.pickle","rb") as f:
-    final_cleaned_data2=pickle.load(f)
-    print("All long summary",final_cleaned_data2)
 
-with open(f"cleaned_all_long_summary.pickle","rb") as f:
+with open(f"final_all_short_summary.pickle","rb") as f:
     final_cleaned_data2=pickle.load(f)
-    print("All short summary",final_cleaned_data2)
+    
+with open(f"final_all_short_summary.pickle","rb") as f:
+    final_cleaned_data2=pickle.load(f)
+    print(final_cleaned_data2)
+
+'''    
+
+'''
+with open(f"final_conclusion_summary.pickle","wb") as f:
+    pickle.dump(final_conclusion_summary,f)
+'''
+with open(f"final_conclusion_summary.pickle","rb") as f:
+    final_conclusion_summary1=pickle.load(f)
+    print(final_conclusion_summary1)
+
 
 
 
