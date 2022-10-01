@@ -1,5 +1,6 @@
 from distutils.command.clean import clean
 from symbol import continue_stmt
+from termios import IUCLC
 import PyPDF2
 import pandas as pd
 import re,nltk
@@ -11,11 +12,22 @@ import contractions
 import PyPDF2
 import nltk
 import pickle
+from cgitb import text
+from typing import final
+import pdfplumber
+from transformers import BartTokenizer, BartForConditionalGeneration, BartConfig
+import pickle
+import gensim   
+from Seq2Ser import *
+import pdfplumber
 nltk.download("wordnet")
 nltk.download("omw-1.4")
 nltk.download("punkt")
 nltk.download("stopwords")
 stops=set(stopwords.words("english"))
+#Preprocessing
+final_long_summary={}
+final_short_summary={}
 def clean_content(sentence):
     
     sentence=re.sub(r'\<[^<>]*\>','',sentence)
@@ -49,82 +61,173 @@ def process_sentences(cleaned_content):
     text=contractions.fix(str1)
     print(text)
     return text
-#Preprocessing
-import pdfplumber
-with pdfplumber.open(r'19850003854.pdf') as pdf:
-  l=len(pdf.pages)
-  
-  text=[]
-  word_count=0
-  for i in range(0,20):
-    extracted_page =pdf.pages[i] 
-    extracted_text = extracted_page.extract_text()
-    
-    
-    text.append(extracted_text)
-  extracted_text='. '.join(text)
-  print(extracted_text.split(".")[0])
-  
-  final_cleaned_data2=[]
-  words_list=[]
-  for sentence in extracted_text.split("."):
-    
-          
-            
-    
-    
-    print("value"+sentence)
-    
-    sentence=clean_content(sentence)
-   
-            
-    sentence=process_sentences(sentence)
-    
-    final_cleaned_data2.append(sentence)
-with open("19830024525_cleaned_10.pickle","wb") as f:
 
-    pickle.dump(final_cleaned_data2,f)
+def totxt(id):
+    pdffileobj=open(f"{id}.pdf","rb")
+    pdfreader=PyPDF2.PdfFileReader(pdffileobj)
+    x=pdfreader.numPages
+    completed=0
+    for i in range(0,x):
+        try:
+            pageobj=pdfreader.getPage(i)
+            text=pageobj.extractText()
+            print(i)
+            
+            with open(f"{id}.txt","a",encoding='utf-8') as f:
+                
+                f.write(str(text))
+        except Exception as e:
+            print(e)
+            print(text)
+            break
+def text_rank_short_summary(id,final_cleaned_data1):
+    
+    
+    extracted_text = '. '.join(final_cleaned_data1)
+    def textrank(corpus, ratio=0.2):    
+        if type(corpus) is str:        
+            corpus = [corpus]    
+            lst_summaries = [gensim.summarization.summarize(txt,  
+                            ratio=ratio) for txt in corpus]    
+        return lst_summaries
+    val=textrank(extracted_text)
+    print(len(val[0].split(".")))
+    summary=str(val[0])
 
-with open("19830024525_cleaned_10.pickle","rb") as f:
+    with open("summary3.txt","w") as f:
+        f.write(str(summary))
+    with open("summary3.txt","r") as f:
+        l=[]
+        d={}
+        
+        for i in f.readlines():
+            d[i]=d.get(i,0)+1
+        final_summary=' '.join(d.keys())
+
+    final_short_summary.update({id:final_summary})
+
+    
+def text_rank_long_summary(id,final_cleaned_data1):
+    
+    
+    extracted_text = '. '.join(final_cleaned_data1)
+    def textrank(corpus, ratio=0.2):    
+        if type(corpus) is str:        
+            corpus = [corpus]    
+            lst_summaries = [gensim.summarization.summarize(txt,  
+                            ratio=ratio) for txt in corpus]    
+        return lst_summaries
+    val=textrank(extracted_text)
+    print(len(val[0].split(".")))
+    summary=str(val[0])
+
+    with open("summary3.txt","w") as f:
+        f.write(str(summary))
+    with open("summary3.txt","r") as f:
+        l=[]
+        d={}
+        
+        for i in f.readlines():
+            d[i]=d.get(i,0)+1
+        final_summary=' '.join(d.keys())
+    final_long_summary.update({id:final_summary})
+
+    
+
+def short_summary(id):
+    with pdfplumber.open(f'{id}.pdf') as pdf:
+        l=len(pdf.pages)
+        
+        text=[]
+        word_count=0
+        for i in range(0,20):
+            extracted_page =pdf.pages[i] 
+            extracted_text = extracted_page.extract_text()
+            
+            
+            text.append(extracted_text)
+        extracted_text='. '.join(text)
+        
+        
+        final_cleaned_data2=[]
+        words_list=[]
+        for sentence in extracted_text.split("."):
+            
+            sentence=clean_content(sentence)
+        
+            sentence=process_sentences(sentence)
+            
+            final_cleaned_data2.append(sentence)
+        text_rank_short_summary(id,final_cleaned_data2)
+        
+    
+    '''
+    with open(f"cleaned_short_summary_{id}.pickle","wb") as f:
+
+        pickle.dump(final_cleaned_data2,f)
+
+    with open(f"cleaned_short_summary_{id}.pickle","rb") as f:
+        final_cleaned_data2=pickle.load(f)
+    print("Short Summary:  \n"+final_cleaned_data2)
+    # Convert PDF to Text
+    '''
+def long_summary(id):
+    with pdfplumber.open(f'{id}.pdf') as pdf:
+        l=len(pdf.pages)
+        
+        text=[]
+        word_count=0
+        for i in range(l):
+            extracted_page =pdf.pages[i] 
+            extracted_text = extracted_page.extract_text()
+            
+            
+            text.append(extracted_text)
+        extracted_text='. '.join(text)
+        
+        
+        final_cleaned_data2=[]
+        words_list=[]
+        for sentence in extracted_text.split("."):
+            
+            sentence=clean_content(sentence)
+        
+            sentence=process_sentences(sentence)
+            
+            final_cleaned_data2.append(sentence)
+        text_rank_long_summary(id,final_cleaned_data2)
+    '''
+    with open(f"cleaned_long_{id}.pickle","wb") as f:
+
+        pickle.dump(final_cleaned_data,f)
+
+    with open(f"cleaned_long_{id}.pickle","rb") as f:
+        final_cleaned_data1=pickle.load(f)
+    '''
+
+with open("final_ids.pickle","rb") as f:
+        set1=pickle.load(f)
+        for i in set1:
+            short_summary(i)
+            long_summary(i)
+
+
+with open(f"final_all_long_summary.pickle","wb") as f:
+
+    pickle.dump(final_long_summary,f)
+with open(f"final_all_short_summary.pickle","wb") as f:
+
+    pickle.dump(final_short_summary,f)
+
+with open(f"cleaned_all_short_summary.pickle","rb") as f:
     final_cleaned_data2=pickle.load(f)
-print(final_cleaned_data2)
+    print("All long summary",final_cleaned_data2)
 
-'''
-with open("19830024525.txt","r") as f:
-    final_cleaned_data=[]
-    words_list=[]
-    for i in f.readlines():
-        
-        val=False
-        for words in i.split(" "):
-            for j in words:
-                if j=='.':
-                    val=True
-                    break
-            words_list.append(words)
-        
-        
-        sentence=' '.join(words_list)
-        if val==False:
-            continue
-        else:
-            words_list=[]
-        print(sentence)
-        
-        sentence=clean_content(sentence)
-        
-        
-        sentence=process_sentences(sentence)
-        print(sentence)
-        
-        final_cleaned_data.append(sentence)
+with open(f"cleaned_all_long_summary.pickle","rb") as f:
+    final_cleaned_data2=pickle.load(f)
+    print("All short summary",final_cleaned_data2)
 
-with open("19830024525_cleaned.pickle","wb") as f:
 
-    pickle.dump(final_cleaned_data,f)
-
-with open("19830024525_cleaned.pickle","rb") as f:
-    final_cleaned_data1=pickle.load(f)
 
 '''
 from nltk.cluster.util import cosine_distance
@@ -132,7 +235,7 @@ import numpy as np
 import networkx as nx
 
 # Summary using frequencies
-'''
+
 def sentence_similarity(sent1, sent2, stopwords=None):
     if stopwords is None:
         stopwords = []
@@ -243,23 +346,4 @@ summary()
 
 
 
-# Convert PDF to Text
-'''
-pdffileobj=open("19830024525.pdf","rb")
-pdfreader=PyPDF2.PdfFileReader(pdffileobj)
-x=pdfreader.numPages
-completed=0
-for i in range(0,x):
-    try:
-        pageobj=pdfreader.getPage(i)
-        text=pageobj.extractText()
-        print(i)
-        
-        with open("19830024525.txt","a",encoding='utf-8') as f:
-            
-            f.write(str(text))
-    except Exception as e:
-        print(e)
-        print(text)
-        break
-'''
+
