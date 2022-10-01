@@ -1,11 +1,9 @@
-import pickle
-import pandas as pd
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
-with open("19830024525_cleaned_10.pickle","rb") as f:
-    final_cleaned_data1=pickle.load(f)
-text=' '.join(final_cleaned_data1)
-word_cloud = WordCloud(collocations = False, background_color = 'white').generate(text)
-plt.imshow(word_cloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
+from txtai.embeddings import Embeddings
+import json
+embeddings = Embeddings({
+    
+    "path": "sentence-transformers/all-MiniLM-L6-v2"
+})
+with open("data/vol7.json", "r") as f:
+    data = json.load(f)["descriptions"]
+len(data)
