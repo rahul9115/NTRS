@@ -16,12 +16,23 @@ response = requests.post('https://ntrs.nasa.gov/api/citations/search', headers=h
 
 json_response=response.json()
 results=json_response["results"]
+print(results)
+
 ids=[]
 title=[]
 abstract=[]
 sub_categories=[]
+d={}
 for i in results:
     ids.append(i["id"])
+    title.append(i["title"])
+    abstract.append(i["abstract"])
+    sub_categories.append(i["subjectCategories"])
+d.update({"ids":ids,"title":title,"abstract":abstract,"sub_categories":sub_categories})
+import pickle
+with open("final_all_ids.pickle","wb") as f:
+    pickle.dump(d,f)
+
     
     
     
