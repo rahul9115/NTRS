@@ -18,7 +18,7 @@ import pdfplumber
 from transformers import BartTokenizer, BartForConditionalGeneration, BartConfig
 import pickle
 import gensim   
-from Seq2Ser import *
+
 import pdfplumber
 nltk.download("wordnet")
 nltk.download("omw-1.4")
@@ -117,28 +117,30 @@ def text_rank_short_summary(id,final_cleaned_data1):
     
 def text_rank_long_summary(id,final_cleaned_data1):
     
-    
-    extracted_text = '. '.join(final_cleaned_data1)
-    def textrank(corpus, ratio=0.2):    
-        if type(corpus) is str:        
-            corpus = [corpus]    
-            lst_summaries = [gensim.summarization.summarize(txt,  
-                            ratio=ratio) for txt in corpus]    
-        return lst_summaries
-    val=textrank(extracted_text)
-    print(len(val[0].split(".")))
-    summary=str(val[0])
+    try:
+        extracted_text = '. '.join(final_cleaned_data1)
+        def textrank(corpus, ratio=0.2):    
+            if type(corpus) is str:        
+                corpus = [corpus]    
+                lst_summaries = [gensim.summarization.summarize(txt,  
+                                ratio=ratio) for txt in corpus]    
+            return lst_summaries
+        val=textrank(extracted_text)
+        print(len(val[0].split(".")))
+        summary=str(val[0])
 
-    with open("summary3.txt","w") as f:
-        f.write(str(summary))
-    with open("summary3.txt","r") as f:
-        l=[]
-        d={}
-        
-        for i in f.readlines():
-            d[i]=d.get(i,0)+1
-        final_summary=' '.join(d.keys())
-    final_long_summary.update({id:final_summary})
+        with open("summary3.txt","w") as f:
+            f.write(str(summary))
+        with open("summary3.txt","r") as f:
+            l=[]
+            d={}
+            
+            for i in f.readlines():
+                d[i]=d.get(i,0)+1
+            final_summary=' '.join(d.keys())
+        final_long_summary.update({id:final_summary})
+    except:
+        pass
 
     
 
@@ -246,40 +248,57 @@ def long_summary(id):
     with open(f"cleaned_long_{id}.pickle","rb") as f:
         final_cleaned_data1=pickle.load(f)
    '''
-'''
+
 with open("final_ids.pickle","rb") as f:
         set1=pickle.load(f)
-        for i in set1:
-            #short_summary(i)
-            #long_summary(i)
-            conclusion_summary(i)
+          
+with open("final_all_ids.pickle","rb") as f:
+        val=pickle.load(f)
+        set2=val.get("ids")
+for i in set1:
+    if i not in set2:
+        set2.append(i)
+print("this",len(set(set2)))
+print(set1,set2)
 '''
+for i in set2:
+    print()
+    short_summary(i)
+    long_summary(i)
+    conclusion_summary(i)
 
 '''
-with open(f"final_all_long_summary.pickle","wb") as f:
+'''
+with open(f"final_all_long_summary1.pickle","wb") as f:
 
     pickle.dump(final_long_summary,f)
-with open(f"final_all_short_summary.pickle","wb") as f:
+with open(f"final_all_short_summary1.pickle","wb") as f:
 
     pickle.dump(final_short_summary,f)
 
 
-with open(f"final_all_short_summary.pickle","rb") as f:
+with open(f"final_conclusion_summary1.pickle","wb") as f:
+    pickle.dump(final_conclusion_summary,f)
+
+'''
+with open(f"final_all_long_summary1.pickle","rb") as f:
     final_cleaned_data2=pickle.load(f)
     
-with open(f"final_all_short_summary.pickle","rb") as f:
+    print(len(final_cleaned_data2.keys()))
+          
+          
+
+
+    
+with open(f"final_all_short_summary1.pickle","rb") as f:
     final_cleaned_data2=pickle.load(f)
-    print(final_cleaned_data2)
+    
+    print(len(final_cleaned_data2.keys()))
 
-'''    
 
-'''
-with open(f"final_conclusion_summary.pickle","wb") as f:
-    pickle.dump(final_conclusion_summary,f)
-'''
 with open(f"final_conclusion_summary.pickle","rb") as f:
     final_conclusion_summary1=pickle.load(f)
-    print(final_conclusion_summary1)
+    
 
 
 
