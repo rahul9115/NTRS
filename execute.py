@@ -6,6 +6,13 @@ def search_index():
 @app.route("/search_pdf")
 def search():
     return render_template("search.html")
+@app.route("/after_search")
+def after_search():
+    return render_template("after_search.html")
+
+@app.route("/embed")
+def embed():
+    return render_template("embed.html")
 
 if __name__=="__main__":
     app.debug=True
