@@ -31,12 +31,13 @@ txtai_data[0]
 embeddings.index(txtai_data)
 with open("embeddings.pickle","wb") as f:
     pickle.dump(embeddings,f)
-res = embeddings.search("CII line dominant FIR emission line Galaxy primary coolant", 10)
+res = embeddings.search("HYDRODYNAMIOCSFACCELERATEDDROPS", 10)
 keys=list(summary_data.keys())
 values=list(summary_data.values())
 values=list()
 
 values_summary=list(values_summary)
+final_list=[]
 for r in res:
 
     print(f"Text: {values_summary[r[0]]}")
@@ -48,8 +49,9 @@ for r in res:
             m=k
             break
         k+=1
-    print(keys[m])
-
+    final_list.append(keys[m])
+    
     print(f"Similarity: {r[1]}")
     print()
     break
+print(final_list)
